@@ -13,10 +13,10 @@ export class GameSettings {
   public airSpeed: number = 180;
 
   /** Initial jump velocity impulse in pixels per second */
-  public jumpImpulse: number = 380;
+  public jumpImpulse: number = 500;
 
   /** Second jump velocity impulse in pixels per second */
-  public doubleJumpImpulse: number = 320;
+  public doubleJumpImpulse: number = 400;
 
   /** Horizontal drag force applied to players in pixels per second */
   public pushDrag: number = 50;
@@ -52,7 +52,7 @@ export class GameSettings {
   public pickupCooldownMs: number = 100;
 
   /** Horizontal velocity multiplier for toast ejection (1.0 = normal) */
-  public toastHorizontalMultiplier: number = 2.0;
+  public toastHorizontalMultiplier: number = 1.0;
 
   /** Singleton instance holder */
   private static _instance: GameSettings;

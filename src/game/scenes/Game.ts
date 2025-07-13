@@ -2,6 +2,7 @@ import { Scene, Physics } from 'phaser';
 import { Player } from '../Player';
 import { Toast } from '../Toast';
 import { GameSettings } from '../GameSettings';
+import { LevelBuilder } from '../LevelBuilder';
 
 /**
  * Main game scene handling the 2-player toaster platformer.
@@ -14,10 +15,14 @@ export class Game extends Scene {
   private player2!: Player;
   /** Static physics group containing all platforms */
   private platforms!: Physics.Arcade.StaticGroup;
+  /** Ground platform reference for toast collision */
+  private groundPlatform!: Physics.Arcade.Sprite | null;
   /** Toast object for hot-potato mechanic */
   private toast!: Toast;
   /** UI text displaying toast countdown timer */
   private toastTimerText!: Phaser.GameObjects.Text;
+  /** Level builder for constructing the game world */
+  private levelBuilder!: LevelBuilder;
   /** Reference to game settings singleton */
   private settings: GameSettings;
 
@@ -47,29 +52,20 @@ export class Game extends Scene {
   create() {
     this.physics.world.gravity.y = this.settings.gravityY;
 
-    this.add
-      .image(
-        this.settings.levelWidth / 2,
-        this.settings.levelHeight / 2,
-        'background',
-      )
-      .setDisplaySize(this.settings.levelWidth, this.settings.levelHeight);
+    // Initialize level builder and create the game world
+    this.levelBuilder = new LevelBuilder(this);
+    const levelConfig = LevelBuilder.createDefaultConfig();
+    this.platforms = this.levelBuilder.build(levelConfig);
+    this.groundPlatform = this.levelBuilder.getGroundPlatform();
 
+    // Create game objects
     this.createToasterTextures();
     this.createToastTexture();
-    this.createPlatforms();
     this.createPlayers();
     this.createToast();
     this.setupCamera();
     this.setupCollisions();
     this.createUI();
-
-    this.physics.world.setBounds(
-      0,
-      0,
-      this.settings.levelWidth,
-      this.settings.levelHeight,
-    );
   }
 
   /**
@@ -125,38 +121,6 @@ export class Game extends Scene {
     graphics.fillRect(4, 4, 24, 16);
     graphics.generateTexture('toast', 32, 24);
     graphics.destroy();
-  }
-
-  /**
-   * Creates all level platforms using static physics bodies.
-   * Includes ground platform and floating platforms at various heights.
-   */
-  private createPlatforms() {
-    this.platforms = this.physics.add.staticGroup();
-
-    // Create platform texture
-    const platformGraphics = this.add.graphics();
-    platformGraphics.fillStyle(0x8b4513);
-    platformGraphics.fillRect(0, 0, 200, 32);
-    platformGraphics.generateTexture('platform', 200, 32);
-    platformGraphics.destroy();
-
-    // Ground platform
-    this.platforms
-      .create(
-        this.settings.levelWidth / 2,
-        this.settings.levelHeight - 50,
-        'platform',
-      )
-      .setScale(this.settings.levelWidth / 200, 1)
-      .refreshBody();
-
-    // Additional platforms
-    this.platforms.create(300, this.settings.levelHeight - 200, 'platform');
-    this.platforms.create(600, this.settings.levelHeight - 300, 'platform');
-    this.platforms.create(1000, this.settings.levelHeight - 250, 'platform');
-    this.platforms.create(1400, this.settings.levelHeight - 200, 'platform');
-    this.platforms.create(1700, this.settings.levelHeight - 350, 'platform');
   }
 
   /**
@@ -216,10 +180,8 @@ export class Game extends Scene {
     this.physics.add.collider(this.player1, this.player2);
 
     // Toast collision only with ground platform (not floating platforms)
-    // Get the ground platform (first/largest platform at bottom)
-    const groundPlatform = this.platforms.children.entries[0];
-    if (groundPlatform) {
-      this.physics.add.collider(this.toast, groundPlatform, () => {
+    if (this.groundPlatform) {
+      this.physics.add.collider(this.toast, this.groundPlatform, () => {
         this.toast.handleGroundHit(this.player1);
       });
     }
