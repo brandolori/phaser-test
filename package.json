@@ -20,11 +20,27 @@
         "build-nolog": "vite build --config vite/config.prod.mjs"
     },
     "devDependencies": {
+        "@commitlint/cli": "^19.8.1",
+        "@commitlint/config-conventional": "^19.8.1",
+        "@typescript-eslint/eslint-plugin": "^8.36.0",
+        "@typescript-eslint/parser": "^8.36.0",
+        "eslint": "^9.31.0",
+        "eslint-config-prettier": "^10.1.5",
+        "eslint-plugin-prettier": "^5.5.1",
+        "husky": "^9.1.7",
+        "knip": "^5.61.3",
+        "lint-staged": "^16.1.2",
+        "prettier": "^3.6.2",
+        "semantic-release": "^24.2.7",
+        "stylelint": "^16.21.1",
+        "stylelint-config-standard": "^38.0.0",
+        "stylelint-prettier": "^5.0.3",
         "typescript": "~5.7.2",
         "vite": "^6.3.1"
     },
     "dependencies": {
         "phaser": "^3.90.0",
-        "terser": "^5.39.0"
+        "terser": "^5.39.0",
+        "tweakpane": "^4.0.5"
     }
 }
