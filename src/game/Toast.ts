@@ -1,6 +1,7 @@
 import { Scene, Physics } from 'phaser';
 import { Player } from './Player';
 import { GameSettings } from './GameSettings';
+import { GameStats } from './GameStats';
 
 /**
  * Toast class implementing the "Hot-Potato" mechanic.
@@ -10,6 +11,8 @@ import { GameSettings } from './GameSettings';
 export class Toast extends Physics.Arcade.Sprite {
   /** Reference to game settings singleton */
   private settings: GameSettings;
+  /** Game statistics tracker */
+  private gameStats: GameStats;
   /** Unique identifier for this toast instance */
   private readonly id: string;
   /** Current owner of the toast, null when flying */
@@ -42,6 +45,7 @@ export class Toast extends Physics.Arcade.Sprite {
 
     this.id = id;
     this.settings = GameSettings.getInstance();
+    this.gameStats = GameStats.getInstance();
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -126,6 +130,13 @@ export class Toast extends Physics.Arcade.Sprite {
   private ejectFromOwner(): void {
     if (!this.currentOwner) return;
 
+    // Record ejection statistics
+    const holdTime = this.settings.timeToEject - this.remainingTime;
+    this.gameStats.recordToastEjection(
+      this.currentOwner.getPlayerIndex().toString(),
+      holdTime,
+    );
+
     this.scene.sound.play('bell');
 
     const body = this.body as Physics.Arcade.Body;
@@ -186,6 +197,18 @@ export class Toast extends Physics.Arcade.Sprite {
     }
 
     body.enable = false;
+
+    // Record toast pass statistics
+    const previousOwner = this.lastOwner;
+    const holdTime = previousOwner
+      ? this.settings.timeToEject - this.remainingTime
+      : 0;
+
+    this.gameStats.recordToastPass(
+      previousOwner?.getPlayerIndex().toString() || null,
+      player.getPlayerIndex().toString(),
+      holdTime,
+    );
 
     // Set new owner and reset timer
     this.currentOwner = player;

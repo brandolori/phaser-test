@@ -1,8 +1,8 @@
 import { Scene, Physics } from 'phaser';
 import { Player } from '../Player';
+import { Toast } from '../Toast';
 import { ToastManager, ToastTimerInfo } from '../ToastManager';
 import { GameSettings } from '../GameSettings';
-import { LevelBuilder } from '../LevelBuilder';
 import { InputManager } from '../InputManager';
 import { InfiniteWorldManager } from '../InfiniteWorldManager';
 
@@ -25,8 +25,6 @@ export class Game extends Scene {
   private toastManager!: ToastManager;
   /** UI text displaying toast countdown timers */
   private toastTimerTexts!: Phaser.GameObjects.Text[];
-  /** Level builder for constructing the game world */
-  private levelBuilder!: LevelBuilder;
   /** Input manager for handling keyboard and gamepad input */
   private inputManager!: InputManager;
   /** Infinite world manager for procedural generation */
@@ -76,7 +74,7 @@ export class Game extends Scene {
     this.infiniteWorldManager.initialize();
 
     // Remove world bounds for infinite gameplay
-    this.physics.world.setBounds();
+    this.physics.world.setBounds(0, 0, 0, 0);
 
     // Create game objects
     this.createToasterTextures();
@@ -237,6 +235,11 @@ export class Game extends Scene {
       this.inputManager.refreshGamepadDetection();
     });
 
+    // Add game over shortcut (ESC key)
+    this.input.keyboard?.on('keydown-ESC', () => {
+      this.endGame();
+    });
+
     // Check if no gamepads are detected and show instruction
     if (connectedGamepads.length === 0) {
       this.showGamepadInstructions();
@@ -244,7 +247,7 @@ export class Game extends Scene {
 
     // Add a message to the user
     console.log(
-      '💡 Press G key to refresh gamepad detection or try pressing any button on your controller',
+      '💡 Press G key to refresh gamepad detection, ESC to end game, or try pressing any button on your controller',
     );
   }
 
@@ -474,7 +477,10 @@ export class Game extends Scene {
           '• Each timer counts down while toast is held\n' +
           '• Toast launches when timer hits 0\n' +
           '• Only OTHER players can catch flying toast\n' +
-          '• Toast resets to original owner if it hits ground' +
+          '• Toast resets to original owner if it hits ground\n\n' +
+          'Controls:\n' +
+          '• G key: Refresh gamepad detection\n' +
+          '• ESC key: End game and view statistics' +
           gamepadInfo,
         {
           fontFamily: 'Arial',
@@ -524,5 +530,22 @@ export class Game extends Scene {
         timerText.setVisible(true);
       }
     });
+  }
+
+  /**
+   * Ends the current game and transitions to the game over scene.
+   */
+  private endGame(): void {
+    console.log('🏁 Game ended by player');
+
+    // Play end sound if available
+    try {
+      this.sound.play('bell', { volume: 0.3 });
+    } catch {
+      // Sound not available
+    }
+
+    // Transition to game over scene
+    this.scene.start('GameOverScene');
   }
 }

@@ -1,4 +1,7 @@
 import { Game as MainGame } from './scenes/Game';
+import { MenuScene } from './scenes/MenuScene';
+import { InstructionsScene } from './scenes/InstructionsScene';
+import { GameOverScene } from './scenes/GameOverScene';
 import { AUTO, Game, Scale, Types } from 'phaser';
 
 /**
@@ -27,7 +30,7 @@ const config: Types.Core.GameConfig = {
   input: {
     gamepad: true,
   },
-  scene: [MainGame],
+  scene: [MenuScene, InstructionsScene, MainGame, GameOverScene],
 };
 
 /**
