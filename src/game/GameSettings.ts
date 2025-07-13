@@ -60,6 +60,9 @@ export class GameSettings {
   /** Number of toast instances to create in the game */
   public numberOfToasts: number = 2;
 
+  /** Scale factor for sprites - 0.1 means 10 times smaller */
+  public spriteScale: number = 0.1;
+
   /** Singleton instance holder */
   private static _instance: GameSettings;
 

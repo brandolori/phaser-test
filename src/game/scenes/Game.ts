@@ -47,6 +47,11 @@ export class Game extends Scene {
   preload() {
     this.load.setPath('assets');
     this.load.image('background', 'bg.png');
+    this.load.image('toaster1', 'P10.png');
+    this.load.image('toaster2', 'P20.png');
+    this.load.image('toaster3', 'P30.png');
+    this.load.image('toast1', 'Toast_10.png');
+    this.load.image('toast2', 'Toast_20.png');
     this.load.audio('bell', 'sounds/bell.mp3');
     this.load.audio('clock-short', 'sounds/clock-short.mp3');
   }
@@ -76,9 +81,7 @@ export class Game extends Scene {
     // Remove world bounds for infinite gameplay
     this.physics.world.setBounds(0, 0, 0, 0);
 
-    // Create game objects
-    this.createToasterTextures();
-    this.createToastTextures();
+    // Create game objects (textures are now loaded from preload)
     this.createPlayers();
     this.createToasts();
     this.setupCamera();
@@ -147,67 +150,6 @@ export class Game extends Scene {
     graphics.fillStyle(0x8b4513);
     graphics.fillRect(0, 0, 200, 32);
     graphics.generateTexture('platform', 200, 32);
-    graphics.destroy();
-  }
-
-  /**
-   * Creates procedural toaster textures for all three players.
-   * Generates gold, teal, and purple colored toaster sprites with heating elements.
-   */
-  private createToasterTextures() {
-    const graphics = this.add.graphics();
-
-    // Player 1 - Gold toaster
-    graphics.fillStyle(0xffd700);
-    graphics.fillRoundedRect(0, 0, 64, 64, 8);
-    graphics.fillStyle(0xff6b35);
-    graphics.fillRect(8, 8, 48, 20);
-    graphics.fillRect(16, 40, 32, 8);
-    graphics.generateTexture('toaster1', 64, 64);
-
-    // Player 2 - Teal toaster
-    graphics.clear();
-    graphics.fillStyle(0x4ecdc4);
-    graphics.fillRoundedRect(0, 0, 64, 64, 8);
-    graphics.fillStyle(0xff6b35);
-    graphics.fillRect(8, 8, 48, 20);
-    graphics.fillRect(16, 40, 32, 8);
-    graphics.generateTexture('toaster2', 64, 64);
-
-    // Player 3 - Purple toaster
-    graphics.clear();
-    graphics.fillStyle(0x9b59b6);
-    graphics.fillRoundedRect(0, 0, 64, 64, 8);
-    graphics.fillStyle(0xff6b35);
-    graphics.fillRect(8, 8, 48, 20);
-    graphics.fillRect(16, 40, 32, 8);
-    graphics.generateTexture('toaster3', 64, 64);
-
-    graphics.destroy();
-  }
-
-  /**
-   * Creates toast textures for the hot-potato mechanic.
-   * Generates different colored toast sprites for visual distinction.
-   */
-  private createToastTextures() {
-    const graphics = this.add.graphics();
-
-    // Toast 1 - Brown toast
-    graphics.fillStyle(0x8b4513);
-    graphics.fillRoundedRect(0, 0, 32, 24, 4);
-    graphics.fillStyle(0xa0522d);
-    graphics.fillRect(4, 4, 24, 16);
-    graphics.generateTexture('toast1', 32, 24);
-
-    // Toast 2 - Darker brown toast
-    graphics.clear();
-    graphics.fillStyle(0x654321);
-    graphics.fillRoundedRect(0, 0, 32, 24, 4);
-    graphics.fillStyle(0x8b4513);
-    graphics.fillRect(4, 4, 24, 16);
-    graphics.generateTexture('toast2', 32, 24);
-
     graphics.destroy();
   }
 
@@ -455,43 +397,6 @@ export class Game extends Scene {
 
       this.toastTimerTexts.push(timerText);
     }
-
-    // Game info panel with controller support
-    const connectedGamepads = this.inputManager.getConnectedGamepads();
-    const gamepadInfo =
-      connectedGamepads.length > 0
-        ? `\n\nConnected Controllers: ${connectedGamepads.length}\n${connectedGamepads.map((pad) => `• ${pad.id} (index: ${pad.index})`).join('\n')}`
-        : '\n\nNo controllers detected - using keyboard only';
-
-    this.add
-      .text(
-        20,
-        60,
-        'TOASTER PLATFORMER - DUAL HOT POTATO TOAST (3 PLAYERS)\n\n' +
-          'Player 1 (Gold): A/D/W keys OR Left Stick + A button (Controller 1)\n' +
-          'Player 2 (Teal): Arrow keys OR Left Stick + A button (Controller 2)\n' +
-          'Player 3 (Purple): J/L/I keys OR Left Stick + A button (Controller 3)\n\n' +
-          'Hot Potato Rules:\n' +
-          '• Two toast pieces with independent timers\n' +
-          '• Each player can hold MAX 1 toast at a time\n' +
-          '• Each timer counts down while toast is held\n' +
-          '• Toast launches when timer hits 0\n' +
-          '• Only OTHER players can catch flying toast\n' +
-          '• Toast resets to original owner if it hits ground\n\n' +
-          'Controls:\n' +
-          '• G key: Refresh gamepad detection\n' +
-          '• ESC key: End game and view statistics' +
-          gamepadInfo,
-        {
-          fontFamily: 'Arial',
-          fontSize: '12px',
-          color: '#ffffff',
-          backgroundColor: '#000000',
-          padding: { x: 10, y: 10 },
-        },
-      )
-      .setScrollFactor(0)
-      .setDepth(1000);
   }
 
   /**
