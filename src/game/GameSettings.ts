@@ -27,6 +27,30 @@ export class GameSettings {
   /** Total level height in pixels */
   public levelHeight: number = 768;
 
+  /** Time in seconds a player can hold toast before auto-eject */
+  public timeToEject: number = 3.0;
+
+  /** Upward velocity applied when toast is ejected in pixels per second */
+  public ejectImpulseY: number = 450;
+
+  /** Vertical offset of toast sprite above owner in pixels */
+  public toastOffsetY: number = 8;
+
+  /** Toast collision box width in pixels */
+  public toastCollisionWidth: number = 24;
+
+  /** Toast collision box height in pixels */
+  public toastCollisionHeight: number = 16;
+
+  /** Toast collision box X offset in pixels */
+  public toastCollisionOffsetX: number = 4;
+
+  /** Toast collision box Y offset in pixels */
+  public toastCollisionOffsetY: number = 8;
+
+  /** Pickup cooldown duration in milliseconds */
+  public pickupCooldownMs: number = 100;
+
   /** Singleton instance holder */
   private static _instance: GameSettings;
 

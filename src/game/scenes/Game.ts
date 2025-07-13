@@ -1,5 +1,6 @@
 import { Scene, Physics } from 'phaser';
 import { Player } from '../Player';
+import { Toast } from '../Toast';
 import { GameSettings } from '../GameSettings';
 
 /**
@@ -13,6 +14,10 @@ export class Game extends Scene {
   private player2!: Player;
   /** Static physics group containing all platforms */
   private platforms!: Physics.Arcade.StaticGroup;
+  /** Toast object for hot-potato mechanic */
+  private toast!: Toast;
+  /** UI text displaying toast countdown timer */
+  private toastTimerText!: Phaser.GameObjects.Text;
   /** Reference to game settings singleton */
   private settings: GameSettings;
 
@@ -49,8 +54,10 @@ export class Game extends Scene {
       .setDisplaySize(this.settings.levelWidth, this.settings.levelHeight);
 
     this.createToasterTextures();
+    this.createToastTexture();
     this.createPlatforms();
     this.createPlayers();
+    this.createToast();
     this.setupCamera();
     this.setupCollisions();
     this.createUI();
@@ -67,11 +74,13 @@ export class Game extends Scene {
    * Updates the game state each frame.
    * Called automatically by Phaser at the target frame rate.
    */
-  update() {
-    if (this.player1 && this.player2) {
+  update(_time: number, delta: number) {
+    if (this.player1 && this.player2 && this.toast) {
       this.player1.update();
       this.player2.update();
+      this.toast.update(delta);
       this.updateCamera();
+      this.updateToastTimer();
     }
   }
 
@@ -99,6 +108,20 @@ export class Game extends Scene {
     graphics.fillRect(16, 40, 32, 8);
     graphics.generateTexture('toaster2', 64, 64);
 
+    graphics.destroy();
+  }
+
+  /**
+   * Creates the toast texture for the hot-potato mechanic.
+   * Generates a brown rectangular toast sprite.
+   */
+  private createToastTexture() {
+    const graphics = this.add.graphics();
+    graphics.fillStyle(0x8b4513);
+    graphics.fillRoundedRect(0, 0, 32, 24, 4);
+    graphics.fillStyle(0xa0522d);
+    graphics.fillRect(4, 4, 24, 16);
+    graphics.generateTexture('toast', 32, 24);
     graphics.destroy();
   }
 
@@ -158,6 +181,15 @@ export class Game extends Scene {
   }
 
   /**
+   * Creates the toast object and initializes it with Player 1.
+   * Sets up the hot-potato mechanic starting state.
+   */
+  private createToast() {
+    this.toast = new Toast(this, 0, 0, 'toast');
+    this.toast.resetToPlayer1(this.player1);
+  }
+
+  /**
    * Configures the camera system with bounds and deadzone.
    * Sets up level boundaries and smooth following behavior.
    */
@@ -174,11 +206,30 @@ export class Game extends Scene {
   /**
    * Sets up physics collisions between players and platforms.
    * Also enables player-to-player collision and pushing.
+   * Configures toast collision detection for pickup and ground reset.
    */
   private setupCollisions() {
     this.physics.add.collider(this.player1, this.platforms);
     this.physics.add.collider(this.player2, this.platforms);
     this.physics.add.collider(this.player1, this.player2);
+
+    // Toast collision with platforms triggers ground reset
+    this.physics.add.collider(this.toast, this.platforms, () => {
+      this.toast.handleGroundHit(this.player1);
+    });
+
+    // Toast overlap with players for pickup detection
+    this.physics.add.overlap(this.toast, this.player1, () => {
+      if (!this.toast.isOwned() && this.toast.canBePickedUpBy(this.player1)) {
+        this.toast.pickupBy(this.player1);
+      }
+    });
+
+    this.physics.add.overlap(this.toast, this.player2, () => {
+      if (!this.toast.isOwned() && this.toast.canBePickedUpBy(this.player2)) {
+        this.toast.pickupBy(this.player2);
+      }
+    });
   }
 
   /**
@@ -193,21 +244,38 @@ export class Game extends Scene {
 
   /**
    * Creates the user interface elements.
-   * Displays game title and control instructions in a fixed overlay.
+   * Displays game title, control instructions, and toast timer in fixed overlays.
    */
   private createUI() {
+    // Toast timer display in upper-left corner
+    this.toastTimerText = this.add
+      .text(16, 16, '', {
+        fontFamily: 'monospace',
+        fontSize: '16px',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 3,
+      })
+      .setScrollFactor(0)
+      .setDepth(1000);
+
+    // Game info panel
     this.add
       .text(
         20,
-        20,
-        'TOASTER PLATFORMER\n\n' +
+        60,
+        'TOASTER PLATFORMER - HOT POTATO TOAST\n\n' +
           'Player 1 (Gold): A/D to move, W to jump\n' +
           'Player 2 (Teal): ← / → to move, ↑ to jump\n\n' +
-          'Both players can double-jump!\n' +
-          'Push each other around!',
+          'Hot Potato Rules:\n' +
+          '• Toast starts with Player 1\n' +
+          '• Timer counts down while held\n' +
+          '• Toast launches when timer hits 0\n' +
+          '• Only the OTHER player can catch it\n' +
+          '• Toast resets to Player 1 if it hits ground',
         {
           fontFamily: 'Arial',
-          fontSize: '16px',
+          fontSize: '14px',
           color: '#ffffff',
           backgroundColor: '#000000',
           padding: { x: 10, y: 10 },
@@ -215,5 +283,39 @@ export class Game extends Scene {
       )
       .setScrollFactor(0)
       .setDepth(1000);
+  }
+
+  /**
+   * Updates the toast timer display.
+   * Shows countdown when toast is owned, flight status when flying.
+   * Uses color coding for urgency levels.
+   */
+  private updateToastTimer() {
+    if (this.toast.isOwned()) {
+      const remaining = this.toast.getRemainingTime();
+      const owner = this.toast.getCurrentOwner();
+      const ownerName = owner === this.player1 ? 'Player 1' : 'Player 2';
+
+      // Color coding based on urgency
+      let color = '#ffffff'; // Default white
+      if (remaining <= 1.0) {
+        color = '#ff0000'; // Red for critical (< 1s)
+      } else if (remaining <= 2.0) {
+        color = '#ff8800'; // Orange for warning (< 2s)
+      } else {
+        color = '#ffff00'; // Yellow for caution (< 3s)
+      }
+
+      this.toastTimerText.setText(
+        `${ownerName} Toast: ${remaining.toFixed(1)} s`,
+      );
+      this.toastTimerText.setColor(color);
+      this.toastTimerText.setVisible(true);
+    } else {
+      // Show flight status when toast is airborne
+      this.toastTimerText.setText('🍞 Toast in Flight - Catch it!');
+      this.toastTimerText.setColor('#00ff00'); // Green for flight state
+      this.toastTimerText.setVisible(true);
+    }
   }
 }

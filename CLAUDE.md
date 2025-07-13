@@ -10,6 +10,7 @@ src/
 │   ├── main.ts              # Phaser game configuration with physics
 │   ├── GameSettings.ts      # Singleton for all tunable game parameters
 │   ├── Player.ts            # Player class with physics and controls
+│   ├── Toast.ts             # Hot-potato toast mechanic implementation
 │   └── scenes/
 │       └── Game.ts          # Main game scene with all game logic
 ├── main.ts                  # Entry point and DOM setup
@@ -18,7 +19,11 @@ src/
 public/
 └── assets/
     ├── bg.png              # Background image
-    └── favicon.png         # Site favicon
+    ├── favicon.png         # Site favicon
+    └── sounds/             # Audio assets for game effects
+        ├── bell.mp3        # Toast ejection sound
+        ├── clock-long.mp3  # Timer warning sound
+        └── clock-short.mp3 # Timer tick sound
 ```
 
 ## Technical Stack
@@ -45,6 +50,8 @@ Centralized configuration for all tunable parameters:
 - Physics: `gravityY`, `levelWidth`, `levelHeight`
 - Movement: `runSpeed`, `airSpeed`, `pushDrag`
 - Jumping: `jumpImpulse`, `doubleJumpImpulse`
+- Toast: `timeToEject`, `ejectImpulseY`, `toastOffsetY`, `pickupCooldownMs`
+- Toast Physics: `toastCollisionWidth/Height`, collision offsets
 
 #### Player Class (extends Physics.Arcade.Sprite)
 - **Physics Body**: 32x48 collision box with proper offset
@@ -53,12 +60,20 @@ Centralized configuration for all tunable parameters:
 - **Jumping**: Double-jump mechanic with impulse tracking
 - **Collision**: Pushable bodies for player interaction
 
+#### Toast Class (extends Physics.Arcade.Sprite)
+- **Hot-Potato Mechanic**: Alternating ownership between players
+- **Timed Ejection**: Automatic launch after configurable countdown
+- **Physics Integration**: Dynamic body for flight, disabled when owned
+- **Safety Features**: World bounds detection, pickup cooldown, null guards
+- **Performance**: Optimized position updates with dirty flagging
+
 #### Game Scene Architecture
-1. **Texture Generation**: Procedural toaster sprites (gold/teal)
+1. **Texture Generation**: Procedural toaster and toast sprites
 2. **Platform System**: Static physics bodies for level geometry
-3. **Camera System**: Dynamic following with deadzone
-4. **Collision Setup**: Player-platform and player-player interactions
-5. **UI Layer**: Fixed-position controls display
+3. **Toast System**: Hot-potato mechanic with collision detection
+4. **Camera System**: Dynamic following with deadzone
+5. **Collision Setup**: Player-platform, player-player, and toast interactions
+6. **UI Layer**: Fixed-position controls and dynamic toast timer
 
 ## Game Features
 
@@ -71,6 +86,14 @@ Centralized configuration for all tunable parameters:
 - **Double Jump**: Each player can jump twice before landing
 - **Player Pushing**: Solid collision with pushable physics
 - **Air Control**: Reduced movement speed while airborne
+
+### Hot-Potato Toast Mechanic
+- **Ownership**: Toast starts with Player 1, alternates between players
+- **Timer**: 3-second countdown with visual urgency indicators
+- **Ejection**: Automatic launch with inherited horizontal velocity
+- **Alternation Rule**: Only the non-owner can catch flying toast
+- **Reset**: Toast returns to Player 1 on ground contact or world exit
+- **UI Feedback**: Real-time timer with color-coded urgency levels
 
 ### Camera System
 - **Dynamic Following**: Centers on midpoint between players
@@ -139,9 +162,26 @@ npm run dev         # Development server
 - Orange heating elements for visual detail
 - Collision box smaller than sprite for better feel
 
+### Toast Design
+- Toast sprite: 32x24 pixels brown rectangle with rounded corners
+- Collision box: 24x16 pixels with 4x8 offset for precise interaction
+- Visual feedback: Always visible when owned, physics-driven when flying
+- UI Integration: Timer display with owner identification and urgency colors
+
 ### Future Enhancement Areas
-- Tweakpane integration for designer controls
-- Animation frames for movement states
-- Sound effects and background music
-- Additional level layouts
-- Power-ups and collectibles
+- **Audio Integration**: Sound effects for toast ejection and timer warnings
+- **Tweakpane GUI**: Real-time parameter tuning for all GameSettings
+- **Animation System**: Movement frames for players and toast
+- **Level Expansion**: Multiple layouts and environmental hazards
+- **Game Modes**: Score system, competitive rounds, power-ups
+- **Visual Polish**: Particle effects, screen shake, visual juice
+
+## Recent Updates
+
+### Hot-Potato Toast Mechanic (Latest)
+- **Implementation**: Complete hot-potato mechanic as per ToastMechanic.md
+- **Robustness**: World bounds detection, physics safety guards, pickup cooldown
+- **Performance**: Optimized position updates with dirty flag system
+- **UX Improvements**: Enhanced timer UI with owner display and urgency colors
+- **Configuration**: All constants moved to GameSettings for easy tweaking
+- **Quality**: All linting, type checking, and build processes pass
