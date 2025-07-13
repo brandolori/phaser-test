@@ -31,7 +31,7 @@ export class GameSettings {
   public timeToEject: number = 3.0;
 
   /** Upward velocity applied when toast is ejected in pixels per second */
-  public ejectImpulseY: number = 450;
+  public ejectImpulseY: number = 1000;
 
   /** Vertical offset of toast sprite above owner in pixels */
   public toastOffsetY: number = 8;

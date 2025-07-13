@@ -89,7 +89,7 @@ Centralized configuration for all tunable parameters:
 
 ### Hot-Potato Toast Mechanic
 - **Ownership**: Toast starts with Player 1, alternates between players
-- **Timer**: 3-second countdown with visual urgency indicators
+- **Timer**: X-second countdown with visual urgency indicators
 - **Ejection**: Automatic launch with inherited horizontal velocity
 - **Alternation Rule**: Only the non-owner can catch flying toast
 - **Reset**: Toast returns to Player 1 on ground contact or world exit
@@ -144,44 +144,6 @@ npm run dev         # Development server
 **IMPORTANT**: Before considering any task complete:
 1. Run `npm run lint` and fix all issues
 2. Run `npx tsc --noEmit` for type checking
-3. Run `npm run build` to ensure production build works
+3. Dont run `npm run build` (if not required)
 4. Test functionality in browser
 5. No shortcuts or temporary hacks allowed
-
-## Game Design Notes
-
-### Level Design
-- Ground platform spans full level width
-- Multiple floating platforms at varying heights
-- Level dimensions: 2048x768 pixels
-- Platform texture: Procedurally generated brown rectangles
-
-### Character Design
-- Toaster sprites: 64x64 pixels with rounded corners
-- Color coding: Gold (#FFD700) vs Teal (#4ECDC4)
-- Orange heating elements for visual detail
-- Collision box smaller than sprite for better feel
-
-### Toast Design
-- Toast sprite: 32x24 pixels brown rectangle with rounded corners
-- Collision box: 24x16 pixels with 4x8 offset for precise interaction
-- Visual feedback: Always visible when owned, physics-driven when flying
-- UI Integration: Timer display with owner identification and urgency colors
-
-### Future Enhancement Areas
-- **Audio Integration**: Sound effects for toast ejection and timer warnings
-- **Tweakpane GUI**: Real-time parameter tuning for all GameSettings
-- **Animation System**: Movement frames for players and toast
-- **Level Expansion**: Multiple layouts and environmental hazards
-- **Game Modes**: Score system, competitive rounds, power-ups
-- **Visual Polish**: Particle effects, screen shake, visual juice
-
-## Recent Updates
-
-### Hot-Potato Toast Mechanic (Latest)
-- **Implementation**: Complete hot-potato mechanic as per ToastMechanic.md
-- **Robustness**: World bounds detection, physics safety guards, pickup cooldown
-- **Performance**: Optimized position updates with dirty flag system
-- **UX Improvements**: Enhanced timer UI with owner display and urgency colors
-- **Configuration**: All constants moved to GameSettings for easy tweaking
-- **Quality**: All linting, type checking, and build processes pass
