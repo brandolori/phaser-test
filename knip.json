@@ -1,0 +1,11 @@
+{
+  "entry": ["src/main.ts"],
+  "project": ["src/**/*.ts"],
+  "ignore": [
+    "node_modules/tweakpane/dist/tweakpane.js"
+  ],
+  "ignoreDependencies": [
+    "husky",
+    "semantic-release"
+  ]
+}

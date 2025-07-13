@@ -17,7 +17,12 @@
         "dev": "node log.js dev & vite --config vite/config.dev.mjs",
         "build": "node log.js build & vite build --config vite/config.prod.mjs",
         "dev-nolog": "vite --config vite/config.dev.mjs",
-        "build-nolog": "vite build --config vite/config.prod.mjs"
+        "build-nolog": "vite build --config vite/config.prod.mjs",
+        "lint": "npm run lint:eslint && npm run lint:stylelint",
+        "lint:eslint": "eslint . --ext .ts,.js",
+        "lint:stylelint": "stylelint '**/*.css'",
+        "knip": "knip",
+        "lint:fix": "npm run lint:eslint -- --fix && npm run lint:stylelint -- --fix"
     },
     "devDependencies": {
         "@commitlint/cli": "^19.8.1",
@@ -40,7 +45,15 @@
     },
     "dependencies": {
         "phaser": "^3.90.0",
-        "terser": "^5.39.0",
-        "tweakpane": "^4.0.5"
+        "terser": "^5.39.0"
+    },
+    "lint-staged": {
+        "*.{js,ts}": "eslint --cache --fix",
+        "*.css": "stylelint --fix"
+    },
+    "release": {
+        "branches": [
+            "main"
+        ]
     }
 }
