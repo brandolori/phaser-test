@@ -12,6 +12,7 @@ src/
 │   ├── Player.ts            # Player class with physics and controls
 │   ├── Toast.ts             # Hot-potato toast mechanic implementation
 │   ├── LevelBuilder.ts      # Level construction and world building
+│   ├── InputManager.ts      # Unified input handling (keyboard + gamepad)
 │   └── scenes/
 │       └── Game.ts          # Main game scene orchestration
 ├── main.ts                  # Entry point and DOM setup
@@ -56,10 +57,17 @@ Centralized configuration for all tunable parameters:
 
 #### Player Class (extends Physics.Arcade.Sprite)
 - **Physics Body**: 32x48 collision box with proper offset
-- **Controls**: Configurable key bindings per player
+- **Input System**: Unified input through InputManager (keyboard + gamepad)
 - **Movement**: Ground/air speed differentiation
 - **Jumping**: Double-jump mechanic with impulse tracking
 - **Collision**: Pushable bodies for player interaction
+
+#### InputManager Class (Unified Input System)
+- **Multi-Input Support**: Handles both keyboard and Xbox controller input
+- **Player Assignment**: Up to 2 players with individual gamepad assignments
+- **Action Mapping**: Abstract game actions (LEFT, RIGHT, JUMP) from input devices
+- **Fallback System**: Automatic fallback from gamepad to keyboard
+- **Connection Detection**: Real-time gamepad connection/disconnection handling
 
 #### Toast Class (extends Physics.Arcade.Sprite)
 - **Hot-Potato Mechanic**: Alternating ownership between players
@@ -85,8 +93,16 @@ Centralized configuration for all tunable parameters:
 ## Game Features
 
 ### Player Controls
+
+#### Keyboard Controls (Always Available)
 - **Player 1** (Gold Toaster): A/D movement, W jump
 - **Player 2** (Teal Toaster): ←/→ movement, ↑ jump
+
+#### Xbox Controller Support (Mac Bluetooth)
+- **Player 1**: Controller 1 - Left stick movement, A button jump
+- **Player 2**: Controller 2 - Left stick movement, A button jump
+- **D-Pad Alternative**: D-pad can be used instead of left stick
+- **Automatic Fallback**: If controller disconnects, automatically uses keyboard
 
 ### Physics Mechanics
 - **Gravity**: Configurable downward acceleration
@@ -186,7 +202,15 @@ npm run dev         # Development server
 
 ## Recent Updates
 
-### Architecture Refactoring - Single Responsibility Principle (Latest)
+### Xbox Controller Support Implementation (Latest)
+- **InputManager Class**: Unified input system supporting keyboard and Xbox controllers
+- **Multi-Device Support**: Up to 2 Xbox controllers via Bluetooth on Mac
+- **Action Mapping**: Abstract game actions (LEFT, RIGHT, JUMP) from input devices  
+- **Automatic Fallback**: Seamless fallback from gamepad to keyboard input
+- **Real-time Detection**: Dynamic gamepad connection/disconnection handling
+- **Player Assignment**: Controller 1 → Player 1, Controller 2 → Player 2
+
+### Architecture Refactoring - Single Responsibility Principle
 - **LevelBuilder Class**: Extracted level construction logic from Game scene
 - **Configuration-Driven**: Flexible level design through LevelConfig interface
 - **Separation of Concerns**: Game scene now focuses on orchestration, not construction

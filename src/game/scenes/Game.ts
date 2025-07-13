@@ -3,6 +3,7 @@ import { Player } from '../Player';
 import { Toast } from '../Toast';
 import { GameSettings } from '../GameSettings';
 import { LevelBuilder } from '../LevelBuilder';
+import { InputManager } from '../InputManager';
 
 /**
  * Main game scene handling the 2-player toaster platformer.
@@ -23,6 +24,8 @@ export class Game extends Scene {
   private toastTimerText!: Phaser.GameObjects.Text;
   /** Level builder for constructing the game world */
   private levelBuilder!: LevelBuilder;
+  /** Input manager for handling keyboard and gamepad input */
+  private inputManager!: InputManager;
   /** Reference to game settings singleton */
   private settings: GameSettings;
 
@@ -51,6 +54,10 @@ export class Game extends Scene {
    */
   create() {
     this.physics.world.gravity.y = this.settings.gravityY;
+
+    // Initialize input manager
+    this.inputManager = new InputManager(this);
+    this.setupInputConfiguration();
 
     // Initialize level builder and create the game world
     this.levelBuilder = new LevelBuilder(this);
@@ -124,26 +131,53 @@ export class Game extends Scene {
   }
 
   /**
-   * Creates both player instances with their respective control schemes.
-   * Player 1 uses WASD controls, Player 2 uses arrow keys.
+   * Sets up input configuration for both players.
+   * Configures keyboard and gamepad controls for each player.
+   */
+  private setupInputConfiguration(): void {
+    const inputConfigs = InputManager.createDefaultConfigs();
+
+    // Configure input for both players
+    inputConfigs.forEach((config) => {
+      this.inputManager.configurePlayer(config);
+    });
+
+    // Log connected gamepads for debugging
+    const connectedGamepads = this.inputManager.getConnectedGamepads();
+    console.log('Connected gamepads:', connectedGamepads);
+  }
+
+  /**
+   * Creates both player instances with unified input system.
+   * Player 1 supports WASD + Gamepad 0, Player 2 supports Arrow Keys + Gamepad 1.
    */
   private createPlayers() {
-    const player1Controls = {
-      left: this.input.keyboard!.addKey('A'),
-      right: this.input.keyboard!.addKey('D'),
-      jump: this.input.keyboard!.addKey('W'),
+    const player1Config = {
+      playerIndex: 0,
       color: 0xffd700,
     };
 
-    const player2Controls = {
-      left: this.input.keyboard!.addKey('LEFT'),
-      right: this.input.keyboard!.addKey('RIGHT'),
-      jump: this.input.keyboard!.addKey('UP'),
+    const player2Config = {
+      playerIndex: 1,
       color: 0x4ecdc4,
     };
 
-    this.player1 = new Player(this, 200, 100, 'toaster1', player1Controls);
-    this.player2 = new Player(this, 300, 100, 'toaster2', player2Controls);
+    this.player1 = new Player(
+      this,
+      200,
+      100,
+      'toaster1',
+      player1Config,
+      this.inputManager,
+    );
+    this.player2 = new Player(
+      this,
+      300,
+      100,
+      'toaster2',
+      player2Config,
+      this.inputManager,
+    );
   }
 
   /**
@@ -227,23 +261,30 @@ export class Game extends Scene {
       .setScrollFactor(0)
       .setDepth(1000);
 
-    // Game info panel
+    // Game info panel with controller support
+    const connectedGamepads = this.inputManager.getConnectedGamepads();
+    const gamepadInfo =
+      connectedGamepads.length > 0
+        ? `\n\nConnected Controllers: ${connectedGamepads.length}\n${connectedGamepads.map((pad) => `• ${pad.id} (index: ${pad.index})`).join('\n')}`
+        : '\n\nNo controllers detected - using keyboard only';
+
     this.add
       .text(
         20,
         60,
         'TOASTER PLATFORMER - HOT POTATO TOAST\n\n' +
-          'Player 1 (Gold): A/D to move, W to jump\n' +
-          'Player 2 (Teal): ← / → to move, ↑ to jump\n\n' +
+          'Player 1 (Gold): A/D/W keys OR Left Stick + A button (Controller 1)\n' +
+          'Player 2 (Teal): Arrow keys OR Left Stick + A button (Controller 2)\n\n' +
           'Hot Potato Rules:\n' +
           '• Toast starts with Player 1\n' +
           '• Timer counts down while held\n' +
           '• Toast launches when timer hits 0\n' +
           '• Only the OTHER player can catch it\n' +
-          '• Toast resets to Player 1 if it hits ground',
+          '• Toast resets to Player 1 if it hits ground' +
+          gamepadInfo,
         {
           fontFamily: 'Arial',
-          fontSize: '14px',
+          fontSize: '13px',
           color: '#ffffff',
           backgroundColor: '#000000',
           padding: { x: 10, y: 10 },
