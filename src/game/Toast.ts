@@ -5,10 +5,13 @@ import { GameSettings } from './GameSettings';
 /**
  * Toast class implementing the "Hot-Potato" mechanic.
  * Alternates ownership between players with timed ejection system.
+ * Now supports unique identification for multiple toast instances.
  */
 export class Toast extends Physics.Arcade.Sprite {
   /** Reference to game settings singleton */
   private settings: GameSettings;
+  /** Unique identifier for this toast instance */
+  private readonly id: string;
   /** Current owner of the toast, null when flying */
   private currentOwner: Player | null = null;
   /** Time remaining before automatic ejection in seconds */
@@ -32,10 +35,12 @@ export class Toast extends Physics.Arcade.Sprite {
    * @param x - Initial X position in pixels
    * @param y - Initial Y position in pixels
    * @param texture - Texture key for the toast sprite
+   * @param id - Unique identifier for this toast instance
    */
-  constructor(scene: Scene, x: number, y: number, texture: string) {
+  constructor(scene: Scene, x: number, y: number, texture: string, id: string) {
     super(scene, x, y, texture);
 
+    this.id = id;
     this.settings = GameSettings.getInstance();
 
     scene.add.existing(this);
@@ -82,7 +87,7 @@ export class Toast extends Physics.Arcade.Sprite {
   private updateOwnershipState(delta: number): void {
     if (!this.currentOwner) return;
 
-    // Only update position if needed (optimization)
+    // Position toast above owner (no stacking since each player can only hold one)
     const newX = this.currentOwner.x;
     const newY = this.currentOwner.y - this.settings.toastOffsetY;
 
@@ -261,6 +266,14 @@ export class Toast extends Physics.Arcade.Sprite {
    */
   public canBePickedUpBy(player: Player): boolean {
     return this.lastOwner !== player;
+  }
+
+  /**
+   * Gets the unique identifier for this toast.
+   * @returns The toast ID
+   */
+  public getId(): string {
+    return this.id;
   }
 
   /**

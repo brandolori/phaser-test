@@ -54,6 +54,9 @@ export class GameSettings {
   /** Horizontal velocity multiplier for toast ejection (1.0 = normal) */
   public toastHorizontalMultiplier: number = 1.0;
 
+  /** Number of toast instances to create in the game */
+  public numberOfToasts: number = 2;
+
   /** Singleton instance holder */
   private static _instance: GameSettings;
 
