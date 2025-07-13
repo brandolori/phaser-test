@@ -36,7 +36,7 @@ export interface GamepadConfig {
  * Input configuration for a player
  */
 export interface PlayerInputConfig {
-  /** Player index (0 or 1) */
+  /** Player index (0, 1, or 2) */
   playerIndex: number;
   /** Keyboard controls configuration */
   keyboard: KeyboardConfig;
@@ -49,7 +49,7 @@ export interface PlayerInputConfig {
 /**
  * InputManager handles input from both keyboard and gamepad controllers.
  * Provides a unified interface for checking game actions regardless of input type.
- * Supports up to 2 players with individual gamepad assignments.
+ * Supports up to 3 players with individual gamepad assignments.
  */
 export class InputManager {
   private scene: Scene;
@@ -119,7 +119,7 @@ export class InputManager {
   /**
    * Checks if an action is currently active for a player.
    * @param action - The game action to check
-   * @param playerIndex - The player index (0 or 1)
+   * @param playerIndex - The player index (0, 1, or 2)
    * @returns True if the action is active
    */
   public isActionActive(action: GameAction, playerIndex: number): boolean {
@@ -139,7 +139,7 @@ export class InputManager {
   /**
    * Checks if an action was just pressed for a player.
    * @param action - The game action to check
-   * @param playerIndex - The player index (0 or 1)
+   * @param playerIndex - The player index (0, 1, or 2)
    * @returns True if the action was just pressed
    */
   public wasActionJustPressed(
@@ -298,7 +298,7 @@ export class InputManager {
   }
 
   /**
-   * Creates default input configurations for both players.
+   * Creates default input configurations for all three players.
    * @returns Array of default player input configurations
    */
   public static createDefaultConfigs(): PlayerInputConfig[] {
@@ -331,6 +331,17 @@ export class InputManager {
         },
         gamepad: defaultGamepadConfig,
         gamepadIndex: 1,
+      },
+      // Player 3 - Keyboard IJKL + Gamepad 2
+      {
+        playerIndex: 2,
+        keyboard: {
+          left: 'J',
+          right: 'L',
+          jump: 'I',
+        },
+        gamepad: defaultGamepadConfig,
+        gamepadIndex: 2,
       },
     ];
   }

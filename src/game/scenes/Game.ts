@@ -6,7 +6,7 @@ import { LevelBuilder } from '../LevelBuilder';
 import { InputManager } from '../InputManager';
 
 /**
- * Main game scene handling the 2-player toaster platformer.
+ * Main game scene handling the 3-player toaster platformer.
  * Manages players, platforms, camera, physics, and UI.
  */
 export class Game extends Scene {
@@ -14,6 +14,8 @@ export class Game extends Scene {
   private player1!: Player;
   /** Second player instance (teal toaster) */
   private player2!: Player;
+  /** Third player instance (purple toaster) */
+  private player3!: Player;
   /** Static physics group containing all platforms */
   private platforms!: Physics.Arcade.StaticGroup;
   /** Ground platform reference for toast collision */
@@ -80,9 +82,10 @@ export class Game extends Scene {
    * Called automatically by Phaser at the target frame rate.
    */
   update(_time: number, delta: number) {
-    if (this.player1 && this.player2 && this.toast) {
+    if (this.player1 && this.player2 && this.player3 && this.toast) {
       this.player1.update();
       this.player2.update();
+      this.player3.update();
       this.toast.update(delta);
       this.updateCamera();
       this.updateToastTimer();
@@ -90,8 +93,8 @@ export class Game extends Scene {
   }
 
   /**
-   * Creates procedural toaster textures for both players.
-   * Generates gold and teal colored toaster sprites with heating elements.
+   * Creates procedural toaster textures for all three players.
+   * Generates gold, teal, and purple colored toaster sprites with heating elements.
    */
   private createToasterTextures() {
     const graphics = this.add.graphics();
@@ -112,6 +115,15 @@ export class Game extends Scene {
     graphics.fillRect(8, 8, 48, 20);
     graphics.fillRect(16, 40, 32, 8);
     graphics.generateTexture('toaster2', 64, 64);
+
+    // Player 3 - Purple toaster
+    graphics.clear();
+    graphics.fillStyle(0x9b59b6);
+    graphics.fillRoundedRect(0, 0, 64, 64, 8);
+    graphics.fillStyle(0xff6b35);
+    graphics.fillRect(8, 8, 48, 20);
+    graphics.fillRect(16, 40, 32, 8);
+    graphics.generateTexture('toaster3', 64, 64);
 
     graphics.destroy();
   }
@@ -148,8 +160,8 @@ export class Game extends Scene {
   }
 
   /**
-   * Creates both player instances with unified input system.
-   * Player 1 supports WASD + Gamepad 0, Player 2 supports Arrow Keys + Gamepad 1.
+   * Creates all three player instances with unified input system.
+   * Player 1: WASD + Gamepad 0, Player 2: Arrow Keys + Gamepad 1, Player 3: IJKL + Gamepad 2.
    */
   private createPlayers() {
     const player1Config = {
@@ -160,6 +172,11 @@ export class Game extends Scene {
     const player2Config = {
       playerIndex: 1,
       color: 0x4ecdc4,
+    };
+
+    const player3Config = {
+      playerIndex: 2,
+      color: 0x9b59b6,
     };
 
     this.player1 = new Player(
@@ -176,6 +193,14 @@ export class Game extends Scene {
       100,
       'toaster2',
       player2Config,
+      this.inputManager,
+    );
+    this.player3 = new Player(
+      this,
+      400,
+      100,
+      'toaster3',
+      player3Config,
       this.inputManager,
     );
   }
@@ -211,7 +236,10 @@ export class Game extends Scene {
   private setupCollisions() {
     this.physics.add.collider(this.player1, this.platforms);
     this.physics.add.collider(this.player2, this.platforms);
+    this.physics.add.collider(this.player3, this.platforms);
     this.physics.add.collider(this.player1, this.player2);
+    this.physics.add.collider(this.player1, this.player3);
+    this.physics.add.collider(this.player2, this.player3);
 
     // Toast collision only with ground platform (not floating platforms)
     if (this.groundPlatform) {
@@ -232,15 +260,21 @@ export class Game extends Scene {
         this.toast.pickupBy(this.player2);
       }
     });
+
+    this.physics.add.overlap(this.toast, this.player3, () => {
+      if (!this.toast.isOwned() && this.toast.canBePickedUpBy(this.player3)) {
+        this.toast.pickupBy(this.player3);
+      }
+    });
   }
 
   /**
-   * Updates camera position to follow both players.
-   * Centers camera on the midpoint between both player positions.
+   * Updates camera position to follow all three players.
+   * Centers camera on the midpoint between all player positions.
    */
   private updateCamera() {
-    const centerX = (this.player1.x + this.player2.x) / 2;
-    const centerY = (this.player1.y + this.player2.y) / 2;
+    const centerX = (this.player1.x + this.player2.x + this.player3.x) / 3;
+    const centerY = (this.player1.y + this.player2.y + this.player3.y) / 3;
     this.cameras.main.centerOn(centerX, centerY);
   }
 
@@ -272,19 +306,20 @@ export class Game extends Scene {
       .text(
         20,
         60,
-        'TOASTER PLATFORMER - HOT POTATO TOAST\n\n' +
+        'TOASTER PLATFORMER - HOT POTATO TOAST (3 PLAYERS)\n\n' +
           'Player 1 (Gold): A/D/W keys OR Left Stick + A button (Controller 1)\n' +
-          'Player 2 (Teal): Arrow keys OR Left Stick + A button (Controller 2)\n\n' +
+          'Player 2 (Teal): Arrow keys OR Left Stick + A button (Controller 2)\n' +
+          'Player 3 (Purple): J/L/I keys OR Left Stick + A button (Controller 3)\n\n' +
           'Hot Potato Rules:\n' +
           '• Toast starts with Player 1\n' +
           '• Timer counts down while held\n' +
           '• Toast launches when timer hits 0\n' +
-          '• Only the OTHER player can catch it\n' +
+          '• Only OTHER players can catch it\n' +
           '• Toast resets to Player 1 if it hits ground' +
           gamepadInfo,
         {
           fontFamily: 'Arial',
-          fontSize: '13px',
+          fontSize: '12px',
           color: '#ffffff',
           backgroundColor: '#000000',
           padding: { x: 10, y: 10 },
@@ -303,7 +338,10 @@ export class Game extends Scene {
     if (this.toast.isOwned()) {
       const remaining = this.toast.getRemainingTime();
       const owner = this.toast.getCurrentOwner();
-      const ownerName = owner === this.player1 ? 'Player 1' : 'Player 2';
+      let ownerName = 'Unknown';
+      if (owner === this.player1) ownerName = 'Player 1';
+      else if (owner === this.player2) ownerName = 'Player 2';
+      else if (owner === this.player3) ownerName = 'Player 3';
 
       // Color coding based on urgency
       let color = '#ffffff'; // Default white
