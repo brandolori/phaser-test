@@ -24,6 +24,9 @@ const config: Types.Core.GameConfig = {
       debug: false,
     },
   },
+  input: {
+    gamepad: true,
+  },
   scene: [MainGame],
 };
 

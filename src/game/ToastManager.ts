@@ -189,6 +189,14 @@ export class ToastManager {
   }
 
   /**
+   * Gets all toast instances for collision setup.
+   * @returns Array of all toast instances
+   */
+  public getAllToasts(): Toast[] {
+    return Array.from(this.toasts.values());
+  }
+
+  /**
    * Checks if a player can pick up a toast (max 1 toast per player).
    * @param player - The player attempting to pick up a toast
    * @returns True if the player doesn't already own a toast

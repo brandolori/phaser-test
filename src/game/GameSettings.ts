@@ -21,11 +21,14 @@ export class GameSettings {
   /** Horizontal drag force applied to players in pixels per second */
   public pushDrag: number = 50;
 
-  /** Total level width in pixels */
-  public levelWidth: number = 2048;
-
   /** Total level height in pixels */
   public levelHeight: number = 768;
+
+  /** Chunk size for infinite world generation in pixels */
+  public chunkWidth: number = 1024;
+
+  /** Ground platform height from bottom */
+  public groundHeight: number = 100;
 
   /** Time in seconds a player can hold toast before auto-eject */
   public timeToEject: number = 3.0;

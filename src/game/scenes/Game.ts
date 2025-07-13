@@ -4,6 +4,7 @@ import { ToastManager, ToastTimerInfo } from '../ToastManager';
 import { GameSettings } from '../GameSettings';
 import { LevelBuilder } from '../LevelBuilder';
 import { InputManager } from '../InputManager';
+import { InfiniteWorldManager } from '../InfiniteWorldManager';
 
 /**
  * Main game scene handling the 3-player toaster platformer.
@@ -28,6 +29,8 @@ export class Game extends Scene {
   private levelBuilder!: LevelBuilder;
   /** Input manager for handling keyboard and gamepad input */
   private inputManager!: InputManager;
+  /** Infinite world manager for procedural generation */
+  private infiniteWorldManager!: InfiniteWorldManager;
   /** Reference to game settings singleton */
   private settings: GameSettings;
 
@@ -61,11 +64,19 @@ export class Game extends Scene {
     this.inputManager = new InputManager(this);
     this.setupInputConfiguration();
 
-    // Initialize level builder and create the game world
-    this.levelBuilder = new LevelBuilder(this);
-    const levelConfig = LevelBuilder.createDefaultConfig();
-    this.platforms = this.levelBuilder.build(levelConfig);
-    this.groundPlatform = this.levelBuilder.getGroundPlatform();
+    // Create infinite background
+    this.createInfiniteBackground();
+
+    // Initialize platform texture for infinite world
+    this.createPlatformTexture();
+
+    // Initialize infinite world manager
+    this.platforms = this.physics.add.staticGroup();
+    this.infiniteWorldManager = new InfiniteWorldManager(this, this.platforms);
+    this.infiniteWorldManager.initialize();
+
+    // Remove world bounds for infinite gameplay
+    this.physics.world.setBounds();
 
     // Create game objects
     this.createToasterTextures();
@@ -75,6 +86,9 @@ export class Game extends Scene {
     this.setupCamera();
     this.setupCollisions();
     this.createUI();
+
+    // Setup toast ground collisions with infinite world
+    this.setupToastGroundCollisions();
   }
 
   /**
@@ -82,14 +96,60 @@ export class Game extends Scene {
    * Called automatically by Phaser at the target frame rate.
    */
   update(_time: number, delta: number) {
-    if (this.player1 && this.player2 && this.player3 && this.toastManager) {
+    if (
+      this.player1 &&
+      this.player2 &&
+      this.player3 &&
+      this.toastManager &&
+      this.inputManager &&
+      this.infiniteWorldManager
+    ) {
+      // Update input manager to track button state changes
+      this.inputManager.update();
+
       this.player1.update();
       this.player2.update();
       this.player3.update();
       this.toastManager.update(delta);
+
+      // Update infinite world based on player positions
+      const centerX = (this.player1.x + this.player2.x + this.player3.x) / 3;
+      this.infiniteWorldManager.update(centerX);
+
       this.updateCamera();
       this.updateToastTimers();
     }
+  }
+
+  /**
+   * Creates an infinite scrolling background.
+   */
+  private createInfiniteBackground(): void {
+    // Create a repeating background pattern
+    const backgroundImage = this.add.image(
+      0,
+      this.settings.levelHeight / 2,
+      'background',
+    );
+    backgroundImage.setOrigin(0, 0.5);
+    backgroundImage.setDisplaySize(
+      this.settings.levelHeight * 2,
+      this.settings.levelHeight,
+    );
+
+    // The background will be managed by camera scroll factor
+    backgroundImage.setScrollFactor(0.2); // Parallax effect
+  }
+
+  /**
+   * Creates the platform texture for the infinite world.
+   */
+  private createPlatformTexture(): void {
+    const graphics = this.add.graphics();
+    graphics.fillStyle(0x8b4513);
+    graphics.fillRect(0, 0, 200, 32);
+    graphics.generateTexture('platform', 200, 32);
+    graphics.destroy();
   }
 
   /**
@@ -168,6 +228,69 @@ export class Game extends Scene {
     // Log connected gamepads for debugging
     const connectedGamepads = this.inputManager.getConnectedGamepads();
     console.log('Connected gamepads:', connectedGamepads);
+
+    // Refresh gamepad detection and add keyboard listener for manual refresh
+    this.inputManager.refreshGamepadDetection();
+
+    // Add keyboard shortcut to refresh gamepad detection (G key)
+    this.input.keyboard?.on('keydown-G', () => {
+      this.inputManager.refreshGamepadDetection();
+    });
+
+    // Check if no gamepads are detected and show instruction
+    if (connectedGamepads.length === 0) {
+      this.showGamepadInstructions();
+    }
+
+    // Add a message to the user
+    console.log(
+      '💡 Press G key to refresh gamepad detection or try pressing any button on your controller',
+    );
+  }
+
+  /**
+   * Shows instructions for gamepad activation
+   */
+  private showGamepadInstructions(): void {
+    // Create overlay text to instruct user about gamepad interaction
+    const instructionText = this.add
+      .text(
+        this.cameras.main.centerX,
+        this.cameras.main.centerY - 100,
+        'GAMEPAD SETUP\n\nPress any button on your controller\nto activate gamepad support\n\nPress G to refresh detection',
+        {
+          fontFamily: 'monospace',
+          fontSize: '24px',
+          color: '#ffff00',
+          stroke: '#000000',
+          strokeThickness: 2,
+          align: 'center',
+        },
+      )
+      .setOrigin(0.5);
+
+    instructionText.setScrollFactor(0); // Keep fixed on screen
+    instructionText.setDepth(1000); // Always on top
+
+    // Remove the instruction after gamepad is detected or 10 seconds
+    const checkGamepads = () => {
+      const gamepads = this.inputManager.getConnectedGamepads();
+      if (gamepads.length > 0) {
+        instructionText.destroy();
+        console.log('✅ Gamepad detected - removing instructions');
+        return;
+      }
+      // Check again in 1 second
+      this.time.delayedCall(1000, checkGamepads);
+    };
+
+    // Start checking and auto-remove after 10 seconds
+    this.time.delayedCall(1000, checkGamepads);
+    this.time.delayedCall(10000, () => {
+      if (instructionText.active) {
+        instructionText.destroy();
+      }
+    });
   }
 
   /**
@@ -241,17 +364,18 @@ export class Game extends Scene {
   }
 
   /**
-   * Configures the camera system with bounds and deadzone.
-   * Sets up level boundaries and smooth following behavior.
+   * Configures the camera system for infinite world.
+   * Removes horizontal bounds and sets up smooth following behavior.
    */
   private setupCamera() {
+    // Remove horizontal bounds for infinite scrolling, keep vertical bounds
     this.cameras.main.setBounds(
+      -Number.MAX_SAFE_INTEGER / 2,
       0,
-      0,
-      this.settings.levelWidth,
+      Number.MAX_SAFE_INTEGER,
       this.settings.levelHeight,
     );
-    this.cameras.main.setDeadzone(100, 100);
+    this.cameras.main.setDeadzone(200, 100);
   }
 
   /**
@@ -267,9 +391,34 @@ export class Game extends Scene {
     this.physics.add.collider(this.player1, this.player3);
     this.physics.add.collider(this.player2, this.player3);
 
-    // Setup toast collisions and overlaps through the manager
-    this.toastManager.setupGroundCollisions();
+    // Setup toast-player overlaps through the manager
     this.toastManager.setupPlayerOverlaps();
+  }
+
+  /**
+   * Sets up collision detection between toasts and ground platforms in infinite world.
+   */
+  private setupToastGroundCollisions(): void {
+    // Set up collision with all platforms (including ground)
+    this.toastManager.getAllToasts().forEach((toast) => {
+      this.physics.add.collider(
+        toast,
+        this.platforms,
+        (toastObj, platformObj) => {
+          const toast = toastObj as Toast;
+          const platform = platformObj as Physics.Arcade.Sprite;
+
+          // Check if this is a ground platform (based on Y position)
+          const groundY =
+            this.settings.levelHeight - this.settings.groundHeight;
+          if (platform.y >= groundY - 50) {
+            // Some tolerance for ground detection
+            // Reset to Player 1 when hitting ground
+            toast.handleGroundHit(this.player1);
+          }
+        },
+      );
+    });
   }
 
   /**
