@@ -51,7 +51,7 @@ Centralized configuration for all tunable parameters:
 - Movement: `runSpeed`, `airSpeed`, `pushDrag`
 - Jumping: `jumpImpulse`, `doubleJumpImpulse`
 - Toast: `timeToEject`, `ejectImpulseY`, `toastOffsetY`, `pickupCooldownMs`
-- Toast Physics: `toastCollisionWidth/Height`, collision offsets
+- Toast Physics: `toastCollisionWidth/Height`, collision offsets, `toastHorizontalMultiplier`
 
 #### Player Class (extends Physics.Arcade.Sprite)
 - **Physics Body**: 32x48 collision box with proper offset
@@ -90,9 +90,10 @@ Centralized configuration for all tunable parameters:
 ### Hot-Potato Toast Mechanic
 - **Ownership**: Toast starts with Player 1, alternates between players
 - **Timer**: X-second countdown with visual urgency indicators
-- **Ejection**: Automatic launch with inherited horizontal velocity
+- **Ejection**: Automatic launch with configurable horizontal velocity multiplier
+- **Platform Interaction**: Toast passes through floating platforms but resets on ground contact
 - **Alternation Rule**: Only the non-owner can catch flying toast
-- **Reset**: Toast returns to Player 1 on ground contact or world exit
+- **Reset**: Toast returns to Player 1 on ground platform contact or world bounds exit
 - **UI Feedback**: Real-time timer with color-coded urgency levels
 
 ### Camera System

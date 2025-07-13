@@ -51,6 +51,9 @@ export class GameSettings {
   /** Pickup cooldown duration in milliseconds */
   public pickupCooldownMs: number = 100;
 
+  /** Horizontal velocity multiplier for toast ejection (1.0 = normal) */
+  public toastHorizontalMultiplier: number = 2.0;
+
   /** Singleton instance holder */
   private static _instance: GameSettings;
 

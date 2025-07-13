@@ -215,10 +215,14 @@ export class Game extends Scene {
     this.physics.add.collider(this.player2, this.platforms);
     this.physics.add.collider(this.player1, this.player2);
 
-    // Toast collision with platforms triggers ground reset
-    this.physics.add.collider(this.toast, this.platforms, () => {
-      this.toast.handleGroundHit(this.player1);
-    });
+    // Toast collision only with ground platform (not floating platforms)
+    // Get the ground platform (first/largest platform at bottom)
+    const groundPlatform = this.platforms.children.entries[0];
+    if (groundPlatform) {
+      this.physics.add.collider(this.toast, groundPlatform, () => {
+        this.toast.handleGroundHit(this.player1);
+      });
+    }
 
     // Toast overlap with players for pickup detection
     this.physics.add.overlap(this.toast, this.player1, () => {

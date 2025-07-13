@@ -103,7 +103,7 @@ export class Toast extends Physics.Arcade.Sprite {
       this.scene.sound.play('clock-short');
       this.playedOrangeSound = true;
     }
-    if (this.remainingTime <= .75 && !this.playedRedSound) {
+    if (this.remainingTime <= 0.75 && !this.playedRedSound) {
       this.scene.sound.play('clock-short');
       this.playedRedSound = true;
     }
@@ -143,8 +143,10 @@ export class Toast extends Physics.Arcade.Sprite {
       this.currentOwner.y - this.settings.toastOffsetY,
     );
 
-    // Apply launch velocity (inherit owner's horizontal velocity + upward impulse)
-    body.setVelocityX(ownerBody.velocity.x);
+    // Apply launch velocity (inherit owner's horizontal velocity with multiplier + upward impulse)
+    body.setVelocityX(
+      ownerBody.velocity.x * this.settings.toastHorizontalMultiplier,
+    );
     body.setVelocityY(-this.settings.ejectImpulseY);
 
     // Clear ownership
@@ -220,7 +222,7 @@ export class Toast extends Physics.Arcade.Sprite {
   }
 
   /**
-   * Handles collision with the ground or world bounds.
+   * Handles collision with the ground platform.
    * Triggers a reset to Player 1.
    * @param player1 - The first player who should receive the toast after reset
    */
@@ -264,18 +266,19 @@ export class Toast extends Physics.Arcade.Sprite {
   /**
    * Checks if toast is outside world bounds and resets if needed.
    * Handles the case where toast flies out of the level.
+   * Now only resets on world bounds, not platform contact.
    */
   private checkWorldBounds(): void {
     if (this.currentOwner) return; // Only check when flying
 
     const worldBounds = this.scene.physics.world.bounds;
-    const buffer = 50; // Extra buffer beyond world bounds
+    const buffer = 100; // Larger buffer to allow more freedom
 
+    // Reset only if toast goes significantly outside world bounds
     if (
       this.x < worldBounds.x - buffer ||
       this.x > worldBounds.x + worldBounds.width + buffer ||
-      this.y < worldBounds.y - buffer ||
-      this.y > worldBounds.y + worldBounds.height + buffer
+      this.y > worldBounds.y + worldBounds.height + buffer // Only bottom bound matters now
     ) {
       if (this.player1Ref) {
         this.resetToPlayer1(this.player1Ref);
