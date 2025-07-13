@@ -1,7 +1,6 @@
 import { Scene, Physics } from 'phaser';
 import { Player } from './Player';
 import { Toast } from './Toast';
-import { GameStats } from './GameStats';
 
 /**
  * Interface for toast timer display information
@@ -33,8 +32,6 @@ export class ToastManager {
   private players: Player[] = [];
   /** Reference to ground platform for collision */
   private groundPlatform: Physics.Arcade.Sprite | null = null;
-  /** Game statistics tracker */
-  private gameStats: GameStats;
 
   /**
    * Creates a new ToastManager instance.
@@ -42,7 +39,6 @@ export class ToastManager {
    */
   constructor(scene: Scene) {
     this.scene = scene;
-    this.gameStats = GameStats.getInstance();
   }
 
   /**
@@ -190,14 +186,6 @@ export class ToastManager {
       toast.destroy();
     }
     this.toasts.clear();
-  }
-
-  /**
-   * Gets all toast instances for collision setup.
-   * @returns Array of all toast instances
-   */
-  public getAllToasts(): Toast[] {
-    return Array.from(this.toasts.values());
   }
 
   /**

@@ -62,10 +62,10 @@ export class Player extends Physics.Arcade.Sprite {
     body.setCollideWorldBounds(false);
     // Scale collision box accordingly
     body.setSize(
-      128/this.settings.spriteScale, 
-      64/this.settings.spriteScale
+      128 / this.settings.spriteScale,
+      64 / this.settings.spriteScale,
     );
-    
+
     this.scale = this.settings.spriteScale;
     body.pushable = true;
     body.setDrag(this.settings.pushDrag, 0);

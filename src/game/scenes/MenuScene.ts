@@ -7,8 +7,6 @@ import { GameStats } from '../GameStats';
  */
 export class MenuScene extends Scene {
   private startText!: Phaser.GameObjects.Text;
-  private titleText!: Phaser.GameObjects.Text;
-  private instructionsText!: Phaser.GameObjects.Text;
   private gameStats: GameStats;
 
   /**
@@ -30,7 +28,7 @@ export class MenuScene extends Scene {
     this.createBackground();
 
     // Title
-    this.titleText = this.add
+    this.add
       .text(centerX, centerY - 200, 'TOASTER PLATFORMER', {
         fontFamily: 'monospace',
         fontSize: '48px',

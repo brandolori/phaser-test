@@ -27,7 +27,6 @@ export class InfiniteWorldManager {
   private platforms: Physics.Arcade.StaticGroup;
   private chunks: Map<string, PlatformChunk> = new Map();
   private groundPlatforms: Physics.Arcade.Sprite[] = [];
-  private lastPlayerX: number = 0;
   private renderDistance: number = 2; // Number of chunks to keep loaded on each side
 
   /**
@@ -56,8 +55,6 @@ export class InfiniteWorldManager {
    * @param playerX - Current X position of the closest player to camera center
    */
   public update(playerX: number): void {
-    this.lastPlayerX = playerX;
-
     // Calculate which chunk the player is in
     const currentChunk = Math.floor(playerX / this.settings.chunkWidth);
 
@@ -73,7 +70,7 @@ export class InfiniteWorldManager {
     }
 
     // Remove chunks that are too far away
-    this.chunks.forEach((chunk, id) => {
+    this.chunks.forEach((_, id) => {
       const chunkIndex = parseInt(id.replace('chunk_', ''));
       if (Math.abs(chunkIndex - currentChunk) > this.renderDistance + 1) {
         this.removeChunk(id);
@@ -104,7 +101,21 @@ export class InfiniteWorldManager {
     chunk.generated = true;
     this.chunks.set(chunkId, chunk);
 
-    console.log(`Generated chunk ${chunkIndex} (${startX} to ${endX})`);
+    console.log(
+      `Generated chunk ${chunkIndex} (${startX} to ${endX}) with ${chunk.platforms.length} platforms`,
+    );
+
+    // Log platform details for debugging
+    chunk.platforms.forEach((platform, index) => {
+      console.log(
+        `  Platform ${index}: x=${platform.x}, y=${platform.y}, body=${!!platform.body}`,
+      );
+    });
+
+    // Use scene reference to ensure it's marked as used
+    if (this.scene && chunk.platforms.length === 0) {
+      console.warn('No platforms generated for chunk');
+    }
   }
 
   /**
@@ -124,10 +135,17 @@ export class InfiniteWorldManager {
       this.settings.chunkWidth,
       this.settings.groundHeight,
     );
-    groundPlatform.body.setSize(
-      this.settings.chunkWidth,
-      this.settings.groundHeight,
-    );
+    // Ensure body exists and configure collision box
+    if (groundPlatform.body) {
+      groundPlatform.body.setSize(
+        this.settings.chunkWidth,
+        this.settings.groundHeight,
+      );
+      // Force body refresh to ensure physics are properly initialized
+      groundPlatform.body.updateFromGameObject();
+    } else {
+      console.error('Ground platform body not initialized properly');
+    }
     groundPlatform.setTint(0x8b4513); // Brown color
 
     chunk.platforms.push(groundPlatform);

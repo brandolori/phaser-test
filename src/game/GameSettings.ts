@@ -24,6 +24,9 @@ export class GameSettings {
   /** Total level height in pixels */
   public levelHeight: number = 768;
 
+  /** Total level width in pixels (for legacy compatibility) */
+  public levelWidth: number = 2048;
+
   /** Chunk size for infinite world generation in pixels */
   public chunkWidth: number = 1024;
 
