@@ -36,6 +36,8 @@ export class Game extends Scene {
   preload() {
     this.load.setPath('assets');
     this.load.image('background', 'bg.png');
+    this.load.audio('bell', 'sounds/bell.mp3');
+    this.load.audio('clock-short', 'sounds/clock-short.mp3');
   }
 
   /**

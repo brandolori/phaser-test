@@ -21,6 +21,10 @@ export class Toast extends Physics.Arcade.Sprite {
   private positionDirty: boolean = true;
   /** Reference to player1 for reset functionality */
   private player1Ref: Player | null = null;
+  /** Flag to track if the orange warning sound has played */
+  private playedOrangeSound: boolean = false;
+  /** Flag to track if the red warning sound has played */
+  private playedRedSound: boolean = false;
 
   /**
    * Creates a new Toast instance.
@@ -94,6 +98,16 @@ export class Toast extends Physics.Arcade.Sprite {
     // Update countdown timer
     this.remainingTime -= delta / 1000;
 
+    // Play sounds based on remaining time
+    if (this.remainingTime <= 1.5 && !this.playedOrangeSound) {
+      this.scene.sound.play('clock-short');
+      this.playedOrangeSound = true;
+    }
+    if (this.remainingTime <= .75 && !this.playedRedSound) {
+      this.scene.sound.play('clock-short');
+      this.playedRedSound = true;
+    }
+
     // Check for automatic ejection
     if (this.remainingTime <= 0) {
       this.ejectFromOwner();
@@ -106,6 +120,8 @@ export class Toast extends Physics.Arcade.Sprite {
    */
   private ejectFromOwner(): void {
     if (!this.currentOwner) return;
+
+    this.scene.sound.play('bell');
 
     const body = this.body as Physics.Arcade.Body;
     const ownerBody = this.currentOwner.body as Physics.Arcade.Body;
@@ -169,6 +185,10 @@ export class Toast extends Physics.Arcade.Sprite {
     this.remainingTime = this.settings.timeToEject;
     this.lastPickupTime = currentTime;
     this.positionDirty = true;
+
+    // Reset sound flags
+    this.playedOrangeSound = false;
+    this.playedRedSound = false;
 
     // Position immediately above new owner
     this.setPosition(player.x, player.y - this.settings.toastOffsetY);
