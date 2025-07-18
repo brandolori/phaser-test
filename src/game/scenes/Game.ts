@@ -19,6 +19,8 @@ export class Game extends Scene {
   private player3!: Player;
   /** Static physics group containing all platforms */
   private platforms!: Physics.Arcade.StaticGroup;
+  /** Physics group containing all players for collision management */
+  private playersGroup!: Physics.Arcade.Group;
   /** Ground platform reference for toast collision */
   private groundPlatform!: Physics.Arcade.Sprite | null;
   /** Toast manager for handling multiple toast instances */
@@ -77,6 +79,11 @@ export class Game extends Scene {
     this.platforms = this.physics.add.staticGroup();
     this.infiniteWorldManager = new InfiniteWorldManager(this, this.platforms);
     this.infiniteWorldManager.initialize();
+
+    // Create players group for collision management
+    this.playersGroup = this.physics.add.group({
+      runChildUpdate: false, // Players handle their own updates
+    });
 
     // Remove world bounds for infinite gameplay
     this.physics.world.setBounds(0, 0, 0, 0);
@@ -282,6 +289,11 @@ export class Game extends Scene {
       player3Config,
       this.inputManager,
     );
+
+    // Add all players to the collision group
+    this.playersGroup.add(this.player1);
+    this.playersGroup.add(this.player2);
+    this.playersGroup.add(this.player3);
   }
 
   /**
@@ -329,12 +341,11 @@ export class Game extends Scene {
    * Configures toast collision detection for pickup and ground reset.
    */
   private setupCollisions() {
-    this.physics.add.collider(this.player1, this.platforms);
-    this.physics.add.collider(this.player2, this.platforms);
-    this.physics.add.collider(this.player3, this.platforms);
-    this.physics.add.collider(this.player1, this.player2);
-    this.physics.add.collider(this.player1, this.player3);
-    this.physics.add.collider(this.player2, this.player3);
+    // Setup collisions between all players using group
+    this.physics.add.collider(this.playersGroup, this.playersGroup);
+
+    // Setup collisions between players and platforms
+    this.physics.add.collider(this.playersGroup, this.platforms);
 
     // Setup toast-player overlaps through the manager
     this.toastManager.setupPlayerOverlaps();

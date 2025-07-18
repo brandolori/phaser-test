@@ -53,9 +53,6 @@ export class Toast extends Physics.Arcade.Sprite {
     // Set depth lower than players to render behind them
     this.setDepth(-1);
 
-    // Apply sprite scaling
-    this.setScale(this.settings.spriteScale);
-
     const body = this.body as Physics.Arcade.Body;
     if (!body) {
       console.error('Toast: Failed to create physics body');
@@ -63,15 +60,20 @@ export class Toast extends Physics.Arcade.Sprite {
     }
 
     body.setCollideWorldBounds(false);
-    // Scale collision box accordingly
+
+    // Scale toast sprite to match collision box dimensions (24x16 pixels)
+    this.setDisplaySize(24, 16);
+
+    // Set collision box with original settings but for 24x16 sprite
     body.setSize(
-      this.settings.toastCollisionWidth * this.settings.spriteScale,
-      this.settings.toastCollisionHeight * this.settings.spriteScale,
+      this.settings.toastCollisionWidth,
+      this.settings.toastCollisionHeight,
     );
     body.setOffset(
-      this.settings.toastCollisionOffsetX * this.settings.spriteScale,
-      this.settings.toastCollisionOffsetY * this.settings.spriteScale,
+      this.settings.toastCollisionOffsetX,
+      this.settings.toastCollisionOffsetY,
     );
+    body.updateFromGameObject(); // Refresh physics body
     body.setGravityY(this.settings.gravityY);
 
     // Start disabled (will be enabled when ejected)
